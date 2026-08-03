@@ -1,0 +1,116 @@
+# Render Blueprint — deploys the Metlink Django API backend.
+#
+# The Next.js frontend lives in a separate repo (metlink.git) and is deployed
+# on Vercel. See the deployment notes below.
+#
+# To deploy: push this repo to GitHub, then in Render dashboard choose
+# "New +" → "Blueprint" and select this repository. Render will read this file
+# and create all the services below automatically.
+
+databases:
+  - name: metlink-db
+    plan: free
+    databaseName: metlink
+    user: kindred
+
+services:
+  # ── Web service (Django API) ─────────────────────────────────────────
+  - type: web
+    name: metlink-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health/
+    envVars:
+      - key: RENDER
+        value: "true"
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kindred-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kindred-redis
+          property: connectionString
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: SITE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: DEFAULT_ADMIN_EMAIL
+        sync: false
+      - key: DEFAULT_ADMIN_PASSWORD
+        sync: false
+      - key: EMAIL_BACKEND
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        sync: false
+      - key: EMAIL_USE_TLS
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: STRIPE_PUBLIC_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_PREMIUM_MONTHLY
+        sync: false
+      - key: STRIPE_PRICE_PREMIUM_YEARLY
+        sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_MODE
+        sync: false
+    disk:
+      name: kindred-media
+      mountPath: /app/media
+      sizeGB: 1
+
+  # ── Redis (cache + Channels) ─────────────────────────────────────────
+  - type: redis
+    name: kindred-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+    ipAllowList: [] # only allow internal connections
+
+# ── DEPLOYMENT NOTES ────────────────────────────────────────────────────
+#
+# 1. Deploy this backend first (via this blueprint). It will create:
+#      - kindred-api  → https://kindred-api.onrender.com
+#      - kindred-db   → PostgreSQL
+#      - kindred-redis → Redis
+#
+# 2. Deploy the Next.js frontend on Vercel (separate repo: metlink.git).
+#    In Vercel, set the frontend's NEXT_PUBLIC_API_URL environment variable to:
+#      https://kindred-api.onrender.com/api
+#
+# 3. After the frontend is deployed on Vercel, set these env vars on the
+#    backend (kindred-api service) in the Render dashboard:
+#      - FRONTEND_URL          → https://your-frontend.vercel.app
+#      - CORS_ALLOWED_ORIGINS  → https://your-frontend.vercel.app
+#      - CSRF_TRUSTED_ORIGINS  → https://your-frontend.vercel.app
+#      - SITE_URL              → https://kindred-api.onrender.com
+#      - DEFAULT_ADMIN_EMAIL   → your admin email
+#      - DEFAULT_ADMIN_PASSWORD → your admin password
+#      - EMAIL_*               → your SMTP provider settings
+#      - STRIPE_* / PAYPAL_*   → your real payment keys

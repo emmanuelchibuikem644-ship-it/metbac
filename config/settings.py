@@ -11,6 +11,7 @@ under /api/.
 from pathlib import Path
 from datetime import timedelta
 import environ
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -18,9 +19,16 @@ env = environ.Env(DEBUG=(bool, False))
 environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("SECRET_KEY", default="dev-only-insecure-secret-key")
-DEBUG = env.bool("DEBUG", default=True)
+DEBUG = env.bool("DEBUG", default=False)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 SITE_URL = env("SITE_URL", default="http://localhost:8000")
+
+# Render.com sets RENDER=true on all services
+RENDER = env.bool("RENDER", default=False)
+if RENDER:
+    # Render provides the hostname via RENDER_EXTERNAL_HOSTNAME
+    ALLOWED_HOSTS.append(env("RENDER_EXTERNAL_HOSTNAME", default=""))
+    ALLOWED_HOSTS = [h for h in ALLOWED_HOSTS if h]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -75,26 +83,38 @@ ASGI_APPLICATION = "config.asgi.application"
 
 # --- Database -----------------------------------------------------------
 
-DB_ENGINE = env("DB_ENGINE", default="sqlite3")
+# Render provides DATABASE_URL (e.g. postgres://user:pass@host:5432/dbname)
+DATABASE_URL = env("DATABASE_URL", default="")
 
-if DB_ENGINE == "postgresql":
+if DATABASE_URL:
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": env("DB_NAME", default="kindred"),
-            "USER": env("DB_USER", default="kindred"),
-            "PASSWORD": env("DB_PASSWORD", default="kindred"),
-            "HOST": env("DB_HOST", default="localhost"),
-            "PORT": env("DB_PORT", default="5432"),
-        }
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
 else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / env("DB_NAME", default="db.sqlite3"),
+    DB_ENGINE = env("DB_ENGINE", default="sqlite3")
+
+    if DB_ENGINE == "postgresql":
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": env("DB_NAME", default="kindred"),
+                "USER": env("DB_USER", default="kindred"),
+                "PASSWORD": env("DB_PASSWORD", default="kindred"),
+                "HOST": env("DB_HOST", default="localhost"),
+                "PORT": env("DB_PORT", default="5432"),
+            }
         }
-    }
+    else:
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": BASE_DIR / env("DB_NAME", default="db.sqlite3"),
+            }
+        }
 
 # --- Redis / Channels / Cache --------------------------------------------
 
@@ -217,10 +237,14 @@ CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
-SECURE_SSL_REDIRECT = False  # enable behind HTTPS termination in production
+SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=not DEBUG)
 SECURE_HSTS_SECONDS = 0 if DEBUG else 60 * 60 * 24 * 30
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = not DEBUG
+
+# Render terminates TLS at the load balancer; trust the X-Forwarded-Proto header
+if RENDER:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # --- Logging ----------------------------------------------------------
 
