@@ -1,0 +1,9 @@
+Hi {{ user.display_name }},
+
+Welcome to {{ site_name }}! Please confirm your email address by opening the link below:
+
+{{ verify_url }}
+
+If you didn't create this account, you can safely ignore this email.
+
+— The {{ site_name }} team
