@@ -5,9 +5,9 @@
 # If you use this, set the build command in Render to:
 #   pip install -r requirements.txt && python manage.py collectstatic --noinput
 # and the start command to:
-#   daphne -b 0.0.0.0 -p $PORT config.asgi:application
+#   ./start.sh
 #
 # Note: The Docker deployment (Dockerfile) is recommended — it runs migrations,
 # seeds plans, creates the admin, and starts Daphne automatically.
 
-web: daphne -b 0.0.0.0 -p $PORT config.asgi:application
+web: ./start.sh
