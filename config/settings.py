@@ -101,9 +101,9 @@ else:
         DATABASES = {
             "default": {
                 "ENGINE": "django.db.backends.postgresql",
-                "NAME": env("DB_NAME", default="kindred"),
-                "USER": env("DB_USER", default="kindred"),
-                "PASSWORD": env("DB_PASSWORD", default="kindred"),
+                "NAME": env("DB_NAME", default="metlink"),
+                "USER": env("DB_USER", default="metlink"),
+                "PASSWORD": env("DB_PASSWORD", default="metlink"),
                 "HOST": env("DB_HOST", default="localhost"),
                 "PORT": env("DB_PORT", default="5432"),
             }
@@ -158,7 +158,7 @@ EMAIL_PORT = env.int("EMAIL_PORT", default=587)
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Kindred <hello@kindred.example>")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Metlink <hello@metlink.example>")
 
 # --- Payments (placeholders — swap for real keys before launch) -----------
 
@@ -205,8 +205,8 @@ SIMPLE_JWT = {
 # always a way into /django-admin/ in dev/demo environments. CHANGE THESE
 # (or override via env vars) before deploying anywhere real.
 
-DEFAULT_ADMIN_EMAIL = env("DEFAULT_ADMIN_EMAIL", default="admin@kindred.example")
-DEFAULT_ADMIN_PASSWORD = env("DEFAULT_ADMIN_PASSWORD", default="KindredAdmin!2026")
+DEFAULT_ADMIN_EMAIL = env("DEFAULT_ADMIN_EMAIL", default="admin@metlink.example")
+DEFAULT_ADMIN_PASSWORD = env("DEFAULT_ADMIN_PASSWORD", default="MetlinkAdmin!2026")
 
 # --- i18n ------------------------------------------------------------------
 

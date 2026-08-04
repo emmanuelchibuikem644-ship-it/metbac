@@ -11,7 +11,7 @@ databases:
   - name: metlink-db
     plan: free
     databaseName: metlink
-    user: kindred
+    user: metlink
 
 services:
   # ── Web service (Django API) ─────────────────────────────────────────
@@ -30,12 +30,12 @@ services:
         generateValue: true
       - key: DATABASE_URL
         fromDatabase:
-          name: kindred-db
+          name: metlink-db
           property: connectionString
       - key: REDIS_URL
         fromService:
           type: redis
-          name: kindred-redis
+          name: metlink-redis
           property: connectionString
       - key: ALLOWED_HOSTS
         value: ".onrender.com"
@@ -82,13 +82,13 @@ services:
       - key: PAYPAL_MODE
         sync: false
     disk:
-      name: kindred-media
+      name: metlink-media
       mountPath: /app/media
       sizeGB: 1
 
   # ── Redis (cache + Channels) ─────────────────────────────────────────
   - type: redis
-    name: kindred-redis
+    name: metlink-redis
     plan: free
     maxmemoryPolicy: noeviction
     ipAllowList: [] # only allow internal connections
@@ -96,20 +96,20 @@ services:
 # ── DEPLOYMENT NOTES ────────────────────────────────────────────────────
 #
 # 1. Deploy this backend first (via this blueprint). It will create:
-#      - kindred-api  → https://kindred-api.onrender.com
-#      - kindred-db   → PostgreSQL
-#      - kindred-redis → Redis
+#      - metlink-api  → https://metlink-api.onrender.com
+#      - metlink-db   → PostgreSQL
+#      - metlink-redis → Redis
 #
 # 2. Deploy the Next.js frontend on Vercel (separate repo: metlink.git).
 #    In Vercel, set the frontend's NEXT_PUBLIC_API_URL environment variable to:
-#      https://kindred-api.onrender.com/api
+#      https://metlink-api.onrender.com/api
 #
 # 3. After the frontend is deployed on Vercel, set these env vars on the
-#    backend (kindred-api service) in the Render dashboard:
-#      - FRONTEND_URL          → https://your-frontend.vercel.app
-#      - CORS_ALLOWED_ORIGINS  → https://your-frontend.vercel.app
-#      - CSRF_TRUSTED_ORIGINS  → https://your-frontend.vercel.app
-#      - SITE_URL              → https://kindred-api.onrender.com
+#    backend (metlink-api service) in the Render dashboard:
+#      - FRONTEND_URL          → https://metlinks.vercel.app
+#      - CORS_ALLOWED_ORIGINS  → https://metlinks.vercel.app
+#      - CSRF_TRUSTED_ORIGINS  → https://metlinks.vercel.app
+#      - SITE_URL              → https://metlink-api.onrender.com
 #      - DEFAULT_ADMIN_EMAIL   → your admin email
 #      - DEFAULT_ADMIN_PASSWORD → your admin password
 #      - EMAIL_*               → your SMTP provider settings
