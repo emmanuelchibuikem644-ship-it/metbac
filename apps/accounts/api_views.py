@@ -74,6 +74,11 @@ def _send_password_reset_email(user, token_generator):
         logging.getLogger(__name__).exception("Failed to send password reset email to %s", user.email)
 
 
+class EmailTokenObtainPairView(TokenObtainPairView):
+    permission_classes = [AllowAny]
+    serializer_class = EmailTokenObtainPairSerializer
+
+
 class SignupView(APIView):
     permission_classes = [AllowAny]
 
