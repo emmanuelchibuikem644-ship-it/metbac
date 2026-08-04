@@ -31,7 +31,13 @@ def _send_verification_email(user):
         "accounts/email/verify_email.txt",
         {"user": user, "verify_url": verify_url, "site_name": "Kindred"},
     )
-    send_mail("Verify your Kindred account", body, settings.DEFAULT_FROM_EMAIL, [user.email])
+    send_mail(
+        "Verify your Kindred account",
+        body,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=True,
+    )
 
 
 def _send_password_reset_email(user, token_generator):
@@ -43,7 +49,13 @@ def _send_password_reset_email(user, token_generator):
         "accounts/email/password_reset.txt",
         {"user": user, "reset_url": reset_url},
     )
-    send_mail("Reset your Kindred password", body, settings.DEFAULT_FROM_EMAIL, [user.email])
+    send_mail(
+        "Reset your Kindred password",
+        body,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=True,
+    )
 
 
 class SignupView(APIView):
