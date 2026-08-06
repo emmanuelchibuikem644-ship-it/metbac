@@ -189,9 +189,33 @@ PAYPAL_MODE = env("PAYPAL_MODE", default="sandbox")
 # --- CORS (Next.js frontend runs on a different origin) -------------------
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[FRONTEND_URL])
+# Allow the production frontend plus common local dev origins so the app
+# works from localhost during development (e.g. `npm run dev` on :3000/:30001).
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=[
+        FRONTEND_URL,
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:30001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:30001",
+    ],
+)
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[FRONTEND_URL])
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[
+        FRONTEND_URL,
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:30001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:30001",
+    ],
+)
 
 # --- REST framework / JWT auth --------------------------------------------
 
