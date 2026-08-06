@@ -24,6 +24,38 @@ class ProfileLike(models.Model):
         return f"{self.from_user.email} liked {self.to_user.email}"
 
 
+class ProfilePrice(models.Model):
+    """
+    Per-profile subscription pricing, managed from the admin panel.
+
+    profile_id refers to the static profile id in the frontend profiles.js.
+    initial_price_cents is the one-time unlock fee charged on first payment.
+    recurring_monthly_price_cents is auto-charged every 30 days after the
+    initial period ends.
+    """
+    profile_id = models.PositiveIntegerField(unique=True, help_text="ID of the profile in profiles.js")
+    profile_name = models.CharField(max_length=120, blank=True, default="")
+    initial_price_cents = models.PositiveIntegerField(
+        default=20000,
+        help_text="One-time initial unlock fee in cents (e.g. 20000 = $200.00)",
+    )
+    recurring_monthly_price_cents = models.PositiveIntegerField(
+        default=3500,
+        help_text="Recurring monthly price in cents (e.g. 3500 = $35.00)",
+    )
+    recurring_14day_price_cents = models.PositiveIntegerField(
+        default=1400,
+        help_text="Recurring 14-day price in cents (e.g. 1400 = $14.00)",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["profile_id"]
+
+    def __str__(self):
+        return f"Profile {self.profile_id} ({self.profile_name})"
+
+
 class ProfileSubscription(models.Model):
     """Tracks a user's subscription to another user's profile content."""
     subscriber = models.ForeignKey(
@@ -41,8 +73,15 @@ class ProfileSubscription(models.Model):
     expires_at = models.DateTimeField(null=True, blank=True)
     stripe_customer_id = models.CharField(max_length=200, blank=True, default="")
     stripe_payment_method_id = models.CharField(max_length=200, blank=True, default="")
+    stripe_subscription_id = models.CharField(max_length=200, blank=True, default="")
     initial_payment_cents = models.PositiveIntegerField(default=20000, help_text="Initial payment in cents (e.g. 20000 = $200.00)")
     recurring_price_cents = models.PositiveIntegerField(default=1500, help_text="Recurring monthly price in cents (e.g. 1500 = $15.00)")
+    recurring_interval = models.CharField(
+        max_length=20,
+        choices=[("month", "Monthly"), ("14days", "Every 14 days")],
+        default="month",
+        help_text="How often the recurring charge happens",
+    )
     last_charged_at = models.DateTimeField(null=True, blank=True)
     services_unlocked = models.BooleanField(default=False, help_text="True once initial payment is confirmed")
 

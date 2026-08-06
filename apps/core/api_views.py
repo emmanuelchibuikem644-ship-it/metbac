@@ -4,8 +4,36 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import ProfileLike, ProfileSubscription
+from .models import ProfileLike, ProfilePrice, ProfileSubscription
 from .serializers import ProfileLikeSerializer, ProfileSubscriptionSerializer
+
+
+class ProfilePriceView(APIView):
+    """
+    GET /api/core/profile-price/<profile_id>/
+    Returns the per-profile subscription pricing (set in the admin panel).
+    Falls back to sensible defaults if no admin price is configured.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, profile_id):
+        p = ProfilePrice.objects.filter(profile_id=profile_id).first()
+        if p:
+            return Response({
+                "profile_id": p.profile_id,
+                "profile_name": p.profile_name,
+                "initial_price_cents": p.initial_price_cents,
+                "recurring_monthly_price_cents": p.recurring_monthly_price_cents,
+                "recurring_14day_price_cents": p.recurring_14day_price_cents,
+            })
+        # No admin price set — fall back to defaults
+        return Response({
+            "profile_id": profile_id,
+            "profile_name": "",
+            "initial_price_cents": 20000,
+            "recurring_monthly_price_cents": 3500,
+            "recurring_14day_price_cents": 1400,
+        })
 
 
 class LikeProfileView(APIView):

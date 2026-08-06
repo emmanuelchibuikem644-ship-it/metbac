@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from apps.accounts.serializers import MeSerializer
-from .models import ProfileLike, ProfileSubscription
+from .models import ProfileLike, ProfilePrice, ProfileSubscription
 
 User = get_user_model()
 
@@ -172,3 +172,72 @@ def admin_subscriptions(request):
             "started_at": s.started_at.isoformat() if s.started_at else None,
         })
     return Response(data)
+
+
+@api_view(["GET", "PUT"])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def admin_profile_prices(request, profile_id=None):
+    """Manage per-profile subscription pricing from the admin panel.
+
+    GET  /api/core/admin/profile-prices/          — list all price rows (or all profiles)
+    GET  /api/core/admin/profile-prices/<id>/     — get one profile's price
+    PUT  /api/core/admin/profile-prices/<id>/     — update/create a profile's price
+    """
+    token = request.headers.get("Authorization", "")
+    if token != "Bearer admin-session-token":
+        return Response({"detail": "Unauthorized."}, status=401)
+
+    def _row(p):
+        return {
+            "profile_id": p.profile_id,
+            "profile_name": p.profile_name,
+            "initial_price_cents": p.initial_price_cents,
+            "recurring_monthly_price_cents": p.recurring_monthly_price_cents,
+            "recurring_14day_price_cents": p.recurring_14day_price_cents,
+            "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+        }
+
+    # ── List all ──
+    if request.method == "GET" and profile_id is None:
+        rows = ProfilePrice.objects.all().order_by("profile_id")
+        return Response([_row(p) for p in rows])
+
+    # ── Get one ──
+    if request.method == "GET" and profile_id is not None:
+        p = ProfilePrice.objects.filter(profile_id=profile_id).first()
+        if not p:
+            return Response({"detail": "No pricing set for this profile yet."}, status=404)
+        return Response(_row(p))
+
+    # ── Update / create one ──
+    if request.method == "PUT" and profile_id is not None:
+        data = request.data
+        p, _ = ProfilePrice.objects.get_or_create(profile_id=profile_id)
+
+        def _int_field(name, default):
+            val = data.get(name)
+            if val is None:
+                return default
+            try:
+                val = int(val)
+            except (TypeError, ValueError):
+                raise ValueError(f"{name} must be an integer.")
+            if val < 0:
+                raise ValueError(f"{name} cannot be negative.")
+            return val
+
+        try:
+            initial = _int_field("initial_price_cents", p.initial_price_cents)
+            monthly = _int_field("recurring_monthly_price_cents", p.recurring_monthly_price_cents)
+            day14 = _int_field("recurring_14day_price_cents", p.recurring_14day_price_cents)
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
+
+        p.initial_price_cents = initial
+        p.recurring_monthly_price_cents = monthly
+        p.recurring_14day_price_cents = day14
+        p.profile_name = (data.get("profile_name") or p.profile_name)[:120]
+        p.save()
+
+        return Response(_row(p))

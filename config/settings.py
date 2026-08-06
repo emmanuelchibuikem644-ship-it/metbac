@@ -178,6 +178,10 @@ STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="whsec_placeholder"
 STRIPE_PRICE_PREMIUM_MONTHLY = env("STRIPE_PRICE_PREMIUM_MONTHLY", default="price_placeholder_monthly")
 STRIPE_PRICE_PREMIUM_YEARLY = env("STRIPE_PRICE_PREMIUM_YEARLY", default="price_placeholder_yearly")
 
+# Paystack (card, bank transfer + subscription plans)
+PAYSTACK_SECRET_KEY = env("PAYSTACK_SECRET_KEY", default="sk_test_placeholder")
+PAYSTACK_PUBLIC_KEY = env("PAYSTACK_PUBLIC_KEY", default="pk_test_placeholder")
+
 PAYPAL_CLIENT_ID = env("PAYPAL_CLIENT_ID", default="placeholder-paypal-client-id")
 PAYPAL_CLIENT_SECRET = env("PAYPAL_CLIENT_SECRET", default="placeholder-paypal-client-secret")
 PAYPAL_MODE = env("PAYPAL_MODE", default="sandbox")

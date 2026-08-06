@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import admin_api_views, api_views, chat_views, stripe_views
+from . import admin_api_views, api_views, chat_views, paystack_views, stripe_views
 
 app_name = "core"
 
@@ -10,6 +10,7 @@ urlpatterns = [
     path("like/<int:user_id>/", api_views.CheckLikeView.as_view(), name="check-like"),
     path("likes-received/", api_views.MyLikesReceivedView.as_view(), name="likes-received"),
     # Subscriptions
+    path("profile-price/<int:profile_id>/", api_views.ProfilePriceView.as_view(), name="profile-price"),
     path("subscribe/", api_views.SubscribeToProfileView.as_view(), name="subscribe"),
     path("subscription/<int:user_id>/", api_views.CheckSubscriptionView.as_view(), name="check-subscription"),
     path("my-subscriptions/", api_views.MySubscriptionsView.as_view(), name="my-subscriptions"),
@@ -21,10 +22,13 @@ urlpatterns = [
     path("admin/users/<int:user_id>/", admin_api_views.admin_delete_user, name="admin-delete-user"),
     path("admin/likes/", admin_api_views.admin_likes, name="admin-likes"),
     path("admin/subscriptions/", admin_api_views.admin_subscriptions, name="admin-subscriptions"),
-    # Stripe payments
-    path("stripe/create-payment/", stripe_views.CreateSubscriptionPaymentView.as_view(), name="stripe-create-payment"),
-    path("stripe/confirm-payment/", stripe_views.ConfirmSubscriptionPaymentView.as_view(), name="stripe-confirm-payment"),
-    path("stripe/check-access/<int:creator_id>/", stripe_views.CheckServiceAccessView.as_view(), name="stripe-check-access"),
+    path("admin/profile-prices/", admin_api_views.admin_profile_prices, name="admin-profile-prices"),
+    path("admin/profile-prices/<int:profile_id>/", admin_api_views.admin_profile_prices, name="admin-profile-prices-detail"),
+    # Paystack payments (subscriptions — card + bank transfer)
+    path("paystack/create-payment/", paystack_views.CreateSubscriptionPaymentView.as_view(), name="paystack-create-payment"),
+    path("paystack/confirm-payment/", paystack_views.ConfirmSubscriptionPaymentView.as_view(), name="paystack-confirm-payment"),
+    path("paystack/check-access/<int:creator_id>/", paystack_views.CheckServiceAccessView.as_view(), name="paystack-check-access"),
+    # Stripe payments (service payments — kept for services, will migrate later)
     path("stripe/create-service-payment/", stripe_views.CreateServicePaymentView.as_view(), name="stripe-create-service-payment"),
     path("stripe/confirm-service-payment/", stripe_views.ConfirmServicePaymentView.as_view(), name="stripe-confirm-service-payment"),
     # User chat
